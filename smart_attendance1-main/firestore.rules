@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // =========================================================================
+    // Core Collections (The "One Firestore" Structure)
+    // =========================================================================
+
+    // 1. Students Collection
+    // Stores profiles, face descriptors (embedded), and metadata
+    match /students/{studentId} {
+      allow read: if true; // Public read for attendance
+      allow write: if true; // TEMPORARY FOR EXPO - allow all writes for face registration
+    }
+
+    // 2. Teachers Collection
+    // Teacher profiles and access rights
+    match /teachers/{teacherId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 3. Timetable Collection
+    // Class schedules for auto-detection
+    match /timetable/{timetableId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 4. Attendance Logs Collection
+    // The single source of truth for attendance records
+    match /attendance_logs/{logId} {
+      allow read: if true;
+      allow create: if request.auth != null; // Teachers create logs
+      allow update, delete: if request.auth != null; // Admins/Teachers modify
+    }
+
+    // =========================================================================
+    // Legacy / Helper Collections (Restricted or Deprecated)
+    // =========================================================================
+
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Deprecated collections - read only or admin only
+    match /faceData/{docId} {
+      allow read: if true;
+      allow write: if false; // Prevent new writes to legacy collection
+    }
+    
+    match /sections/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    match /subjects/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
